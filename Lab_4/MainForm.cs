@@ -1,13 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
 using System.Media;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Lab_4
@@ -17,38 +9,28 @@ namespace Lab_4
         Timer timer = new Timer();
         SoundPlayer sp = new SoundPlayer("..\\..\\files\\soundforalarm.wav");
 
-        private List<AlarmControl> alarms = new List<AlarmControl>();
-
-        internal void AddAlarmControl(AlarmControl alarm)
-        {
-            // Добавление AlarmControl на главную форму
-            alarms.Add(alarm);
-            splitContainer1.Panel1.Controls.Add(alarm);
-        }
-
-
         public MainForm()
         {
             InitializeComponent();
 
             timer.Interval = 1000; 
             timer.Tick += Timer_Tick;
+            timer.Start();
            
         }
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            timer.Stop();
-            PlayAlarmSound();
-
-            foreach (AlarmControl alarm in alarms)
+           
+            foreach (DataGridViewRow row in alarmsGridView.Rows)
             {
-                DateTime time = DateTime.Parse(alarm.SoundTime);
-
-                if (alarm.IsActive && time.TimeOfDay == DateTime.Now.TimeOfDay)
+                if (row.Cells["ActiveStatus"].Value != null && (bool)row.Cells["ActiveStatus"].Value)
                 {
-                    // Воспроизведение звука для будильника
-                    PlayAlarmSound();
+                    string time = row.Cells["Time"].Value.ToString();
+                    if (DateTime.Now.ToString("HH:mm:ss") == time)
+                    {
+                        PlayAlarmSound();
+                    }
                 }
             }
         }
@@ -59,8 +41,28 @@ namespace Lab_4
 
         private void addBtn_Click(object sender, EventArgs e)
         {
-            CreateAlarmForm createAlarmForm = new CreateAlarmForm();
+            CreateAlarmForm createAlarmForm = new CreateAlarmForm(alarmsGridView);
             createAlarmForm.ShowDialog();
+        }
+
+        private void deleteBtn_Click(object sender, EventArgs e)
+        {
+            DialogResult result = MessageBox.Show("Вы уверены, что хотить удалить эту строку?", "Удаление", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result == DialogResult.Yes)
+            {
+                if (alarmsGridView.SelectedCells.Count > 0)
+                {
+                    DataGridViewCell selectedCell = alarmsGridView.SelectedCells[0];
+
+
+                    int rowIndex = selectedCell.RowIndex;
+
+                    if (rowIndex != -1)
+                    {
+                        alarmsGridView.Rows.RemoveAt(rowIndex);
+                    }
+                }
+            }
         }
     }
 }
